@@ -3,27 +3,37 @@ import bcrypt from "bcrypt";
 
 //Update Controller
 export const updateController = async (req, res) => {
-  if (req.body.userId === req.params.id) {
-    if (req.body.password) {
-      const salt = await bcrypt.genSalt(10);
-      req.body.password = await bcrypt.hash(req.body.password, salt);
+  const { id } = req.params;
+  const { email, phone } = req.body;
+
+  try {
+    const user = await userModel.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
-    try {
+
+    // Check if the email or phone number matches the user's credentials
+    if (email === user.email || phone === user.phone) {
+      if (req.body.password) {
+        const salt = await bcrypt.genSalt(10);
+        req.body.password = await bcrypt.hash(req.body.password, salt);
+      }
       const updatedUser = await userModel.findByIdAndUpdate(
-        req.params.id,
+        id,
         {
           $set: req.body,
         },
         { new: true }
       );
-      res.status(200).json(updatedUser);
-    } catch (error) {
-      res.status(500).json(error);
+      return res.status(200).json(updatedUser);
+    } else {
+      return res.status(401).json({ message: "Invalid credentials" });
     }
-  } else {
-    res.status(401).json("wrong credentials");
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 };
+
 //Delete Controller
 export const deleteController = async (req, res) => {
   if (req.body.userId === req.params.id) {
