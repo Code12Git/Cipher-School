@@ -4,7 +4,8 @@ import bcrypt from "bcrypt";
 //Update Controller
 export const updateController = async (req, res) => {
   const { id } = req.params;
-  const { email, phone } = req.body;
+  const { email, phone, aboutMe, cipherMap, professionalInfo, interests } =
+    req.body;
 
   try {
     const user = await userModel.findById(id);
@@ -21,7 +22,15 @@ export const updateController = async (req, res) => {
       const updatedUser = await userModel.findByIdAndUpdate(
         id,
         {
-          $set: req.body,
+          $set: {
+            email,
+            phone,
+            password: req.body.password,
+            aboutMe,
+            cipherMap,
+            professionalInfo,
+            interests,
+          },
         },
         { new: true }
       );
@@ -61,5 +70,46 @@ export const getController = async (req, res) => {
     res.status(200).json(others);
   } catch (err) {
     res.status(500).json(err);
+  }
+};
+
+//follow a user
+export const followController = async (req, res) => {
+  if (req.body.userId !== req.params.id) {
+    try {
+      const user = await userModel.findById(req.params.id);
+      const currentuser = await userModel.findById(req.body.userId);
+      if (!user.followers.includes(req.body.userId)) {
+        await user.updateOne({ $push: { followers: req.body.userId } });
+        await currentuser.updateOne({ $push: { followings: req.params.id } });
+        res.status(200).json("user has been followed!");
+      } else {
+        res.status(403).json("you already follow this user");
+      }
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  } else {
+    res.status(403).json("You cant follow yourself");
+  }
+};
+//Unfollow a user
+export const unfollowController = async (req, res) => {
+  if (req.body.userId !== req.params.id) {
+    try {
+      const user = await userModel.findById(req.params.id);
+      const currentuser = await userModel.findById(req.body.userId);
+      if (user.followers.includes(req.body.userId)) {
+        await user.updateOne({ $pull: { followers: req.body.userId } });
+        await currentuser.updateOne({ $pull: { followings: req.params.id } });
+        res.status(200).json("user has been unfollowed!");
+      } else {
+        res.status(403).json("you dont't follow this user");
+      }
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  } else {
+    res.status(403).json("You cant unfollow yourself");
   }
 };

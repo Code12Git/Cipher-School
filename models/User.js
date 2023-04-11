@@ -10,6 +10,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    aboutMe: { type: String },
+    cipherMap: { type: String },
+    onTheWeb: { type: String },
+    professionalInfo: { type: String },
+    interests: [{ type: String }],
     email: {
       type: String,
       required: true,
@@ -21,6 +26,14 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+    },
+    followers: {
+      type: Array,
+      default: [],
+    },
+    following: {
+      type: Array,
+      default: [],
     },
   },
   {
